@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinema Gecesi</title>
+    <title>Film Gecesi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;600;800&display=swap');
         
         :root {
             --cinema-red: #7f1d1d;
-            --neon-blue: #38bdf8;
-            --gold: #f59e0b;
         }
 
         body {
@@ -58,38 +56,43 @@
         .scroll-custom::-webkit-scrollbar { width: 6px; }
         .scroll-custom::-webkit-scrollbar-track { background: transparent; }
         .scroll-custom::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        /* Kilit mekanizması: Yetkisiz erişimi engellemek için */
+        .locked-content {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="p-0 m-0">
 
     <!-- Giriş Ekranı -->
-    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950">
+    <div id="login-screen" class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950">
         <div class="p-10 rounded-3xl w-full max-w-md text-center border border-slate-800 bg-slate-900 shadow-2xl">
             <div class="mb-6 inline-block p-4 bg-red-950 rounded-full">
-                <span class="text-5xl">🎬</span>
+                <span class="text-5xl">🔐</span>
             </div>
-            <h1 class="cinema-font text-4xl mb-2 text-white tracking-wider">SİNEMA GECESİ</h1>
-            <p class="text-slate-500 mb-8 italic">Yeni Veri Tabanına Bağlanılıyor</p>
-            <input type="password" id="key-input" placeholder="••••••••" class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 text-center text-xl mb-4 text-white outline-none focus:border-red-600 transition-all">
+            <h1 class="cinema-font text-4xl mb-2 text-white tracking-wider">GÜVENLİ GİRİŞ</h1>
+            <p class="text-slate-500 mb-8 italic">Erişim anahtarını giriniz</p>
+            <input type="password" id="key-input" placeholder="Anahtar Kelime..." class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 text-center text-xl mb-4 text-white outline-none focus:border-red-600 transition-all">
             <button onclick="checkKey()" class="w-full btn-cinema text-white font-bold py-4 rounded-xl shadow-lg">
-                SİSTEMİ BAŞLAT
+                SİSTEMİ AÇ
             </button>
-            <p id="error-msg" class="text-red-500 mt-4 font-semibold hidden">Anahtar Yanlış!</p>
+            <p id="error-msg" class="text-red-500 mt-4 font-semibold hidden animate-bounce">Geçersiz Anahtar!</p>
         </div>
     </div>
 
-    <!-- Ana Arayüz -->
-    <main id="main-content" class="hidden flex flex-col min-h-screen">
+    <!-- Ana Arayüz (locked-content sınıfı ile başlar) -->
+    <main id="main-content" class="locked-content flex flex-col min-h-screen">
         
         <!-- Header -->
         <header class="py-8 px-6 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-40">
             <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-left">
-                    <h1 class="cinema-font text-5xl text-white tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">VIP LOUNGE</h1>
-                    <p class="text-red-500 font-bold uppercase tracking-[0.3em] text-xs mt-1" id="user-display">Bağlanıyor...</p>
+                    <h1 class="cinema-font text-5xl text-white tracking-widest">FİLM LİSTESİ</h1>
+                    <p class="text-red-500 font-bold uppercase tracking-[0.3em] text-xs mt-1" id="user-display">Doğrulanıyor...</p>
                 </div>
                 <button onclick="toggleAddModal()" class="btn-cinema px-10 py-4 rounded-full font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                    <span>+</span> YENİ KAYIT EKLE
+                    <span>+</span> YENİ FİLM EKLE
                 </button>
             </div>
         </header>
@@ -97,7 +100,7 @@
         <!-- Film Alanları -->
         <div class="container mx-auto px-4 py-10 grid grid-cols-1 xl:grid-cols-3 gap-8">
             
-            <!-- 1: ÖNERİ HAVUZU -->
+            <!-- 1: ÖNERİLER -->
             <section class="flex flex-col gap-6">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-blue-400">💡 ÖNERİLER</h2>
@@ -106,7 +109,7 @@
                 <div id="list-suggest" class="space-y-4 scroll-custom"></div>
             </section>
 
-            <!-- 2: VİZYONDA (İZLENECEKLER) -->
+            <!-- 2: İZLENECEKLER -->
             <section class="flex flex-col gap-6">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-amber-400">🍿 İZLENECEKLER</h2>
@@ -115,7 +118,7 @@
                 <div id="list-to-watch" class="space-y-4 scroll-custom"></div>
             </section>
 
-            <!-- 3: ARŞİV (İZLENENLER) -->
+            <!-- 3: İZLENENLER -->
             <section class="flex flex-col gap-6 opacity-60 hover:opacity-100 transition-opacity">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-emerald-400">✅ İZLENENLER</h2>
@@ -127,33 +130,28 @@
         </div>
     </main>
 
-    <!-- Modal: Film Ekle -->
+    <!-- Modallar -->
     <div id="add-modal" class="fixed inset-0 z-[110] hidden flex items-center justify-center bg-black/90 backdrop-blur-xl p-4">
-        <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-md border border-slate-700 relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-md border border-slate-700 relative shadow-2xl">
             <button onclick="toggleAddModal()" class="absolute -top-4 -right-4 bg-red-600 text-white w-10 h-10 rounded-full font-bold shadow-lg">X</button>
-            <h3 class="cinema-font text-3xl mb-8 text-white text-center">YENİ KAYIT</h3>
+            <h3 class="cinema-font text-3xl mb-8 text-white text-center">FİLM EKLE</h3>
             <div class="space-y-6">
-                <div class="relative">
-                    <input type="text" id="movie-title" placeholder="Film Adı..." class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 outline-none focus:border-red-600 text-white">
-                </div>
-                <div>
-                    <select id="movie-status" class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 text-white outline-none">
-                        <option value="suggest">💡 Öneriler</option>
-                        <option value="to-watch">🍿 İzlenecekler</option>
-                        <option value="watched">✅ İzlenenler</option>
-                    </select>
-                </div>
-                <button onclick="addMovie()" id="add-btn" class="w-full btn-cinema py-4 rounded-xl font-bold text-white uppercase">SİSTEME İŞLE</button>
+                <input type="text" id="movie-title" placeholder="Film Adı..." class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 outline-none focus:border-red-600 text-white">
+                <select id="movie-status" class="w-full p-4 bg-slate-800 rounded-xl border border-slate-700 text-white outline-none">
+                    <option value="suggest">💡 Önerilere Ekle</option>
+                    <option value="to-watch">🍿 İzleneceklere Al</option>
+                    <option value="watched">✅ İzlenenlere Taşı</option>
+                </select>
+                <button onclick="addMovie()" id="add-btn" class="w-full btn-cinema py-4 rounded-xl font-bold text-white uppercase">LİSTEYE EKLE</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Oy Veren Kim? -->
     <div id="vote-modal" class="fixed inset-0 z-[120] hidden flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
         <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-xs border border-amber-500/50 text-center shadow-2xl">
-            <h3 class="cinema-font text-xl mb-4 text-amber-500">KİM OY VERİYOR?</h3>
+            <h3 class="cinema-font text-xl mb-4 text-amber-500">OY KULLAN</h3>
             <input type="text" id="voter-name" placeholder="İsminiz..." class="w-full p-3 bg-slate-800 rounded-xl border border-slate-700 text-center text-white outline-none mb-4">
-            <button id="confirm-vote-btn" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition-all">OYU GÖNDER</button>
+            <button id="confirm-vote-btn" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold transition-all">OY VER</button>
             <button onclick="closeVoteModal()" class="mt-4 text-slate-500 text-sm underline">Vazgeç</button>
         </div>
     </div>
@@ -168,58 +166,58 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // YENİ DATABASE KİMLİĞİ (Sıfırdan başlamak için ID değiştirildi)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sinema-vip-v2-fresh';
 
-        const KEY = "film123";
+        // GÜVENLİK
+        const KEY = "filmgecesi_x123";
+        let authenticated = false;
         let user = null;
         let currentVoteId = null;
 
-        // Global functions
-        window.checkKey = checkKey;
-        window.toggleAddModal = toggleAddModal;
-        window.addMovie = addMovie;
-        window.changeStatus = changeStatus;
-        window.deleteMovie = deleteMovie;
-        window.openVoteModal = openVoteModal;
-        window.closeVoteModal = closeVoteModal;
-
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            if(user) {
-                document.getElementById('user-display').textContent = `YENİ SEZON BAŞLADI | OP: ${user.uid.substring(0,6)}`;
-                startListening();
+        // Güvenlik sarmalayıcı: Şifre girilmeden hiçbir fonksiyon çalışmaz
+        const secure = (fn) => (...args) => {
+            if (!authenticated) {
+                console.warn("Erişim engellendi: Yetki yok.");
+                return;
             }
-        });
+            return fn(...args);
+        };
 
-        async function checkKey() {
+        window.checkKey = async function() {
             const val = document.getElementById('key-input').value;
             if(val === KEY) {
+                authenticated = true;
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
                         await signInAnonymously(auth);
                     }
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                } catch(e) { alert("Bağlantı Hatası!"); }
+                    // Giriş ekranını kaldır ve içeriği göster
+                    document.getElementById('login-screen').remove();
+                    document.getElementById('main-content').classList.remove('locked-content');
+                    startListening();
+                } catch(e) { 
+                    alert("Bağlantı hatası oluştu."); 
+                }
             } else {
-                document.getElementById('error-msg').classList.remove('hidden');
+                const error = document.getElementById('error-msg');
+                error.classList.remove('hidden');
+                document.getElementById('key-input').value = "";
+                setTimeout(() => error.classList.add('hidden'), 2000);
             }
-        }
+        };
 
-        function startListening() {
-            // KURAL 1: Güvenli yol yapısı
+        const startListening = secure(() => {
             const moviesRef = collection(db, 'artifacts', appId, 'public', 'data', 'movies');
             onSnapshot(moviesRef, (snap) => {
                 const movies = [];
                 snap.forEach(d => movies.push({ id: d.id, ...d.data() }));
                 render(movies);
-            }, (err) => console.error("Veri hatası:", err));
-        }
+            }, (err) => console.error("Veri senkronizasyon hatası"));
+        });
 
-        async function addMovie() {
+        window.addMovie = secure(async function() {
             const title = document.getElementById('movie-title').value.trim();
             const status = document.getElementById('movie-status').value;
             if(!title || !user) return;
@@ -240,24 +238,24 @@
                 toggleAddModal();
                 document.getElementById('movie-title').value = '';
             } catch(e) {
-                console.error("Ekleme hatası:", e);
+                console.error("Ekleme hatası");
             } finally {
                 btn.disabled = false;
             }
-        }
+        });
 
-        function openVoteModal(id) {
+        window.openVoteModal = secure(function(id) {
             currentVoteId = id;
             document.getElementById('vote-modal').classList.remove('hidden');
             setTimeout(() => document.getElementById('voter-name').focus(), 100);
-        }
+        });
 
-        function closeVoteModal() {
+        window.closeVoteModal = function() {
             document.getElementById('vote-modal').classList.add('hidden');
             document.getElementById('voter-name').value = '';
-        }
+        };
 
-        document.getElementById('confirm-vote-btn').onclick = async () => {
+        document.getElementById('confirm-vote-btn').onclick = secure(async () => {
             const name = document.getElementById('voter-name').value.trim();
             if(!name || !currentVoteId) return;
             
@@ -269,26 +267,27 @@
                 });
                 closeVoteModal();
             } catch(e) {
-                console.error("Oylama hatası:", e);
+                console.error("Oylama hatası");
             }
-        };
+        });
 
-        async function changeStatus(id, s) {
+        window.changeStatus = secure(async function(id, s) {
             const movieRef = doc(db, 'artifacts', appId, 'public', 'data', 'movies', id);
             await updateDoc(movieRef, { status: s });
-        }
+        });
 
-        async function deleteMovie(id) {
-            if(!confirm("Bu kaydı veri tabanından kalıcı olarak silmek istediğine emin misin?")) return;
+        window.deleteMovie = secure(async function(id) {
+            if(!confirm("Bu kaydı kalıcı olarak silmek istiyor musunuz?")) return;
             try {
                 const movieRef = doc(db, 'artifacts', appId, 'public', 'data', 'movies', id);
                 await deleteDoc(movieRef);
             } catch(e) {
-                console.error("Silme hatası:", e);
+                console.error("Silme hatası");
             }
-        }
+        });
 
         function render(movies) {
+            if (!authenticated) return;
             const lists = {
                 suggest: document.getElementById('list-suggest'),
                 'to-watch': document.getElementById('list-to-watch'),
@@ -297,7 +296,6 @@
             const counts = { suggest: 0, 'to-watch': 0, watched: 0 };
             Object.values(lists).forEach(l => l.innerHTML = '');
 
-            // KURAL 2: JS tarafında sıralama (Oy sayısı ve sonra tarihe göre)
             movies.sort((a,b) => (b.votes || 0) - (a.votes || 0) || (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
             movies.forEach(m => {
@@ -306,14 +304,14 @@
                 
                 let actionArea = '';
                 if(m.status === 'suggest') {
-                    const votersText = m.voters?.length > 0 ? `<div class="text-[10px] text-slate-500 mt-1 italic line-clamp-1">Voters: ${m.voters.join(', ')}</div>` : '';
+                    const votersText = m.voters?.length > 0 ? `<div class="text-[10px] text-slate-500 mt-1 italic line-clamp-1">Oylayanlar: ${m.voters.join(', ')}</div>` : '';
                     actionArea = `
                         <div class="flex flex-col gap-2">
                             ${votersText}
                             <div class="flex justify-between items-center">
                                 <button onclick="openVoteModal('${m.id}')" class="vote-badge text-white px-4 py-1 rounded-full text-xs font-black">👍 ${m.votes || 0} OY</button>
                                 <div class="flex gap-2">
-                                    <button onclick="changeStatus('${m.id}', 'to-watch')" class="text-[10px] border border-amber-500 text-amber-500 px-2 py-1 rounded hover:bg-amber-500 hover:text-white transition-all font-bold">VİZYONA AL</button>
+                                    <button onclick="changeStatus('${m.id}', 'to-watch')" class="text-[10px] border border-amber-500 text-amber-500 px-2 py-1 rounded hover:bg-amber-500 hover:text-white transition-all font-bold">LİSTEYE AL</button>
                                     <button onclick="deleteMovie('${m.id}')" class="text-slate-600 hover:text-red-500 p-1">🗑️</button>
                                 </div>
                             </div>
@@ -322,7 +320,7 @@
                 } else if(m.status === 'to-watch') {
                     actionArea = `
                         <div class="flex justify-between items-center mt-2">
-                            <button onclick="changeStatus('${m.id}', 'watched')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-lg shadow-emerald-900/20">İZLENDİ</button>
+                            <button onclick="changeStatus('${m.id}', 'watched')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold transition-all shadow-lg">İZLENDİ</button>
                             <button onclick="deleteMovie('${m.id}')" class="text-slate-600 hover:text-red-500 p-1">🗑️</button>
                         </div>
                     `;
@@ -352,9 +350,16 @@
             document.getElementById('watched-count').textContent = String(counts.watched).padStart(2, '0');
         }
 
-        function toggleAddModal() {
+        window.toggleAddModal = secure(function() {
             document.getElementById('add-modal').classList.toggle('hidden');
-        }
+        });
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if(user && authenticated) {
+                document.getElementById('user-display').textContent = `OTURUM AKTİF | ID: ${user.uid.substring(0,6)}`;
+            }
+        });
 
         document.getElementById('key-input').addEventListener('keypress', e => e.key === 'Enter' && checkKey());
         document.getElementById('voter-name').addEventListener('keypress', e => e.key === 'Enter' && document.getElementById('confirm-vote-btn').click());
