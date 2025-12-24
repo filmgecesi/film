@@ -57,7 +57,6 @@
         .scroll-custom::-webkit-scrollbar-track { background: transparent; }
         .scroll-custom::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
-        /* Kilit mekanizması: Yetkisiz erişimi engellemek için */
         .locked-content {
             display: none !important;
         }
@@ -77,14 +76,13 @@
             <button onclick="checkKey()" class="w-full btn-cinema text-white font-bold py-4 rounded-xl shadow-lg">
                 SİSTEMİ AÇ
             </button>
-            <p id="error-msg" class="text-red-500 mt-4 font-semibold hidden animate-bounce">Geçersiz Anahtar!</p>
+            <!-- Şifre hata mesajı alanı -->
+            <p id="error-msg" class="text-red-500 mt-4 font-semibold hidden animate-bounce">❌ Geçersiz Anahtar!</p>
         </div>
     </div>
 
-    <!-- Ana Arayüz (locked-content sınıfı ile başlar) -->
+    <!-- Ana Arayüz -->
     <main id="main-content" class="locked-content flex flex-col min-h-screen">
-        
-        <!-- Header -->
         <header class="py-8 px-6 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-40">
             <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-left">
@@ -97,10 +95,7 @@
             </div>
         </header>
 
-        <!-- Film Alanları -->
         <div class="container mx-auto px-4 py-10 grid grid-cols-1 xl:grid-cols-3 gap-8">
-            
-            <!-- 1: ÖNERİLER -->
             <section class="flex flex-col gap-6">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-blue-400">💡 ÖNERİLER</h2>
@@ -109,7 +104,6 @@
                 <div id="list-suggest" class="space-y-4 scroll-custom"></div>
             </section>
 
-            <!-- 2: İZLENECEKLER -->
             <section class="flex flex-col gap-6">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-amber-400">🍿 İZLENECEKLER</h2>
@@ -118,7 +112,6 @@
                 <div id="list-to-watch" class="space-y-4 scroll-custom"></div>
             </section>
 
-            <!-- 3: İZLENENLER -->
             <section class="flex flex-col gap-6 opacity-60 hover:opacity-100 transition-opacity">
                 <div class="flex justify-between items-end px-2">
                     <h2 class="cinema-font text-2xl text-emerald-400">✅ İZLENENLER</h2>
@@ -126,7 +119,6 @@
                 </div>
                 <div id="list-watched" class="space-y-4 scroll-custom"></div>
             </section>
-
         </div>
     </main>
 
@@ -169,42 +161,41 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sinema-vip-v2-fresh';
 
         // GÜVENLİK
-        const KEY = "filmgecesi_x123";
+        const KEY = "filmgecesi_x123"; // Burayı değiştirebilirsin
         let authenticated = false;
         let user = null;
         let currentVoteId = null;
 
-        // Güvenlik sarmalayıcı: Şifre girilmeden hiçbir fonksiyon çalışmaz
         const secure = (fn) => (...args) => {
-            if (!authenticated) {
-                console.warn("Erişim engellendi: Yetki yok.");
-                return;
-            }
+            if (!authenticated) return;
             return fn(...args);
         };
 
         window.checkKey = async function() {
             const val = document.getElementById('key-input').value;
+            const errorMsg = document.getElementById('error-msg');
+            
             if(val === KEY) {
                 authenticated = true;
+                errorMsg.classList.add('hidden');
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
                         await signInAnonymously(auth);
                     }
-                    // Giriş ekranını kaldır ve içeriği göster
                     document.getElementById('login-screen').remove();
                     document.getElementById('main-content').classList.remove('locked-content');
                     startListening();
                 } catch(e) { 
-                    alert("Bağlantı hatası oluştu."); 
+                    console.error("Giriş hatası:", e);
                 }
             } else {
-                const error = document.getElementById('error-msg');
-                error.classList.remove('hidden');
+                // Şifre yanlışsa mesajı göster
+                errorMsg.classList.remove('hidden');
                 document.getElementById('key-input').value = "";
-                setTimeout(() => error.classList.add('hidden'), 2000);
+                // 3 saniye sonra otomatik gizle
+                setTimeout(() => errorMsg.classList.add('hidden'), 3000);
             }
         };
 
@@ -214,12 +205,14 @@
                 const movies = [];
                 snap.forEach(d => movies.push({ id: d.id, ...d.data() }));
                 render(movies);
-            }, (err) => console.error("Veri senkronizasyon hatası"));
+            }, (err) => console.error("Veri çekme hatası:", err));
         });
 
         window.addMovie = secure(async function() {
-            const title = document.getElementById('movie-title').value.trim();
+            const titleInput = document.getElementById('movie-title');
+            const title = titleInput.value.trim();
             const status = document.getElementById('movie-status').value;
+            
             if(!title || !user) return;
 
             const btn = document.getElementById('add-btn');
@@ -236,9 +229,9 @@
                     addedBy: user.uid
                 });
                 toggleAddModal();
-                document.getElementById('movie-title').value = '';
+                titleInput.value = '';
             } catch(e) {
-                console.error("Ekleme hatası");
+                console.error("Ekleme hatası:", e);
             } finally {
                 btn.disabled = false;
             }
@@ -256,7 +249,8 @@
         };
 
         document.getElementById('confirm-vote-btn').onclick = secure(async () => {
-            const name = document.getElementById('voter-name').value.trim();
+            const nameInput = document.getElementById('voter-name');
+            const name = nameInput.value.trim();
             if(!name || !currentVoteId) return;
             
             const movieRef = doc(db, 'artifacts', appId, 'public', 'data', 'movies', currentVoteId);
@@ -267,7 +261,7 @@
                 });
                 closeVoteModal();
             } catch(e) {
-                console.error("Oylama hatası");
+                console.error("Oylama hatası:", e);
             }
         });
 
@@ -277,12 +271,12 @@
         });
 
         window.deleteMovie = secure(async function(id) {
-            if(!confirm("Bu kaydı kalıcı olarak silmek istiyor musunuz?")) return;
+            if(!confirm("Bu filmi silmek istediğine emin misin?")) return;
             try {
                 const movieRef = doc(db, 'artifacts', appId, 'public', 'data', 'movies', id);
                 await deleteDoc(movieRef);
             } catch(e) {
-                console.error("Silme hatası");
+                console.error("Silme hatası:", e);
             }
         });
 
